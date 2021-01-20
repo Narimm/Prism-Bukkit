@@ -9,7 +9,7 @@ import me.botsko.prism.database.sql.SqlPrismDataSource;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.io.File;
-
+import java.util.logging.Logger;
 
 
 /**
@@ -18,11 +18,22 @@ import java.io.File;
  */
 public class PrismHikariDataSource extends SqlPrismDataSource {
 
-    private static final File propFile = new File(Prism.getInstance().getDataFolder(),
-            "hikari.properties");
-    private static final HikariConfig dbConfig;
+    private final HikariConfig dbConfig;
 
-    static {
+    public PrismHikariDataSource(ConfigurationSection section,HikariConfig dbConfig) {
+        super(section,Logger.getAnonymousLogger());
+        this.dbConfig = dbConfig;
+    }
+
+    /**
+     * Create a dataSource.
+     *
+     * @param section Config
+     */
+    public PrismHikariDataSource(ConfigurationSection section) {
+        super(section,Prism.getInstance().getLogger());
+        name = "hikari";
+        File propFile = new File(Prism.getInstance().getDataFolder(),"hikari.properties");
         if (propFile.exists()) {
             Prism.log("Configuring Hikari from " + propFile.getName());
             dbConfig = new HikariConfig(propFile.getPath());
@@ -45,24 +56,14 @@ public class PrismHikariDataSource extends SqlPrismDataSource {
         }
     }
 
-    /**
-     * Create a dataSource.
-     *
-     * @param section Config
-     */
-    public PrismHikariDataSource(ConfigurationSection section) {
-        super(section);
-        name = "hikari";
-    }
-
     @Override
     public PrismDataSource createDataSource() {
         try {
             database = new HikariDataSource(dbConfig);
-            createSettingsQuery();
+            getSettingsQuery();
             return this;
         } catch (HikariPool.PoolInitializationException e) {
-            Prism.warn("Hikari Pool did not Initialize: " + e.getMessage());
+            info("Hikari Pool did not Initialize: " + e.getMessage());
             database = null;
         }
         return this;

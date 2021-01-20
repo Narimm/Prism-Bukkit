@@ -9,18 +9,37 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
  * Created by benjamincharlton on 6/04/2019.
  */
 public class SqlSettingsQuery extends AbstractSettingsQuery implements SettingsQuery {
+
     private final SqlPrismDataSource dataSource;
     private static String prefix = "prism_";
+    private final Logger logger;
 
+    /**
+     * Create a settings Query with Prism initialized.
+     * @param dataSource SqlPrismDataSource
+     * @param log Logger.
+     */
+    public SqlSettingsQuery(SqlPrismDataSource dataSource, Logger log) {
+        this.dataSource = dataSource;
+        prefix = dataSource.getPrefix();
+        logger = log;
+    }
+
+    /**
+     * Create a settings Query with Prism initialized.
+     * @param dataSource SqlPrismDataSource
+     */
     public SqlSettingsQuery(SqlPrismDataSource dataSource) {
         this.dataSource = dataSource;
         prefix = dataSource.getPrefix();
+        logger = Prism.getInstance().getLogger();
     }
 
     @Override
@@ -37,7 +56,7 @@ public class SqlSettingsQuery extends AbstractSettingsQuery implements SettingsQ
             s.executeUpdate();
 
         } catch (final SQLException e) {
-            Prism.debug("Database Error:" + e.getMessage());
+            log("[Prism] -Debug- Database Error:" + e.getMessage());
         }
     }
 
@@ -59,7 +78,7 @@ public class SqlSettingsQuery extends AbstractSettingsQuery implements SettingsQ
             s2.setString(2, value);
             s2.executeUpdate();
         } catch (final SQLException e) {
-            Prism.debug("Database Error:" + e.getMessage());
+            log("Database Error:" + e.getMessage());
         }
     }
 
@@ -85,8 +104,12 @@ public class SqlSettingsQuery extends AbstractSettingsQuery implements SettingsQ
             }
 
         } catch (final SQLException e) {
-            Prism.debug("Database Error:" + e.getMessage());
+            log("Database Error:" + e.getMessage());
         }
         return value;
+    }
+
+    private void log(String message) {
+        logger.info("[Prism] --Debug-- " + message);
     }
 }

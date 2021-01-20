@@ -51,7 +51,7 @@ public class MySqlPrismDataSource extends SqlPrismDataSource {
      * @param section Config
      */
     public MySqlPrismDataSource(ConfigurationSection section) {
-        super(section);
+        super(section,Prism.getInstance().getLogger());
         nonStandardSql = this.section.getBoolean("useNonStandardSql", false);
         detectNonStandardSql();
         name = "mysql";
@@ -108,7 +108,7 @@ public class MySqlPrismDataSource extends SqlPrismDataSource {
         }
         try {
             database = new HikariDataSource(dbConfig);
-            createSettingsQuery();
+            getSettingsQuery();
             return this;
         } catch (HikariPool.PoolInitializationException e) {
             Prism.warn("Hikari Pool did not Initialize: " + e.getMessage());

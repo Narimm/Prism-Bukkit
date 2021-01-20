@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -56,7 +57,7 @@ public interface PrismDataSource {
 
     ActionReportQuery createActionReportQuery();
 
-    SettingsQuery createSettingsQuery();
+    SettingsQuery getSettingsQuery();
 
     SelectProcessActionQuery createProcessQuery();
 

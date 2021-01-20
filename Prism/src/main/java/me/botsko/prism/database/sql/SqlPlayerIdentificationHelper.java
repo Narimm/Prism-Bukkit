@@ -203,9 +203,9 @@ public class SqlPlayerIdentificationHelper {
                     Prism.warn("Player 2(existing): " + offlinePlayer.getName() + " / " + test.getUuid());
                     Prism.warn("Player 2 will have the name set with a random index.");
                     test.setName(offlinePlayer.getName() + "_" + offlinePlayer.getUniqueId().getMostSignificantBits());
-                    updatePlayer(test);
+                } else {
+                    test.setName(offlinePlayer.getName());
                 }
-                test.setName(offlinePlayer.getName());
                 updatePlayer(test);
             }
         }

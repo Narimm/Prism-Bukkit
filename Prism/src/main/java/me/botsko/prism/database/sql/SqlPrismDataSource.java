@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -31,6 +32,7 @@ import java.util.Map;
 public abstract class SqlPrismDataSource implements PrismDataSource {
 
     protected static HikariDataSource database = null;
+    private Logger logger;
     protected String name = "unconfigured";
     protected ConfigurationSection section;
     private boolean paused; //when set the datasource will not allow insertions;
@@ -41,15 +43,15 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
      * Constructor.
      * @param section Config
      */
-    public SqlPrismDataSource(ConfigurationSection section) {
+    public SqlPrismDataSource(ConfigurationSection section,Logger log) {
         this.section = section;
+        this.logger = log;
         if (section == null) {
             setPrefix("");
         } else {
             setPrefix(section.getString("prefix"));
         }
         setFile();
-        createDataSource();
     }
 
     public static void updateDefaultConfig(ConfigurationSection section) {
@@ -138,9 +140,9 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
                 return;
             }
         } catch (final SQLException ignored) {
-            Prism.warn("Database rescue was unsuccessful.");
+            warning("Database rescue was unsuccessful.");
         }
-        Prism.warn("Database connection error: " + e.getMessage());
+        warning("Database connection error: " + e.getMessage());
         if (e.getMessage().contains("marked as crashed")) {
             final String[] msg = new String[2];
             msg[0] = "If MySQL crashes during write it may corrupt it's indexes.";
@@ -231,15 +233,18 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
             }
 
             // id map
-            query = "CREATE TABLE IF NOT EXISTS `" + prefix + "id_map` (" + "`material` varchar(63) NOT NULL,"
-                    + "`state` varchar(255) NOT NULL," + "`block_id` mediumint(5) NOT NULL AUTO_INCREMENT,"
-                    + "`block_subid` mediumint(5) NOT NULL DEFAULT 0," + "PRIMARY KEY (`material`, `state`),"
-                    + "UNIQUE KEY (`block_id`, `block_subid`)" + ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+            query = "CREATE TABLE IF NOT EXISTS `" + prefix + "id_map` ("
+                    + "`material` varchar(63) NOT NULL,"
+                    + "`state` varchar(255) NOT NULL,"
+                    + "`block_id` mediumint(5) NOT NULL AUTO_INCREMENT,"
+                    + "`block_subid` mediumint(5) NOT NULL DEFAULT 0,"
+                    + "PRIMARY KEY (`material`, `state`),"
+                    + "UNIQUE KEY (`block_id`, `block_subid`)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
             st.executeUpdate(query);
         } catch (final SQLException e) {
             handleDataSourceException(e);
-
-            Prism.log("Database connection error: " + e.getMessage());
+            info("Database connection error: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -262,7 +267,7 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
             s.executeUpdate();
             ResultSet rs = s.getGeneratedKeys();
             if (rs.next()) {
-                Prism.log("Registering new action type to the database/cache: " + actionName + " " + rs.getInt(1));
+                info("Registering new action type to the database/cache: " + actionName + " " + rs.getInt(1));
                 Prism.prismActions.put(actionName, rs.getInt(1));
             } else {
                 throw new SQLException("Insert statement failed - no generated key obtained.");
@@ -283,11 +288,11 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
                 ResultSet rs = s.executeQuery()
                 ) {
             while (rs.next()) {
-                Prism.debug("Loaded " + rs.getString(2) + ", id:" + rs.getInt(1));
+                debug("Loaded " + rs.getString(2) + ", id:" + rs.getInt(1));
                 Prism.prismActions.put(rs.getString(2), rs.getInt(1));
             }
 
-            Prism.debug("Loaded " + Prism.prismActions.size() + " actions into the cache.");
+            debug("Loaded " + Prism.prismActions.size() + " actions into the cache.");
 
         } catch (final SQLException e) {
             handleDataSourceException(e);
@@ -311,7 +316,7 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
             while (rs.next()) {
                 prismWorlds.put(rs.getString(2), rs.getInt(1));
             }
-            Prism.debug("Loaded " + prismWorlds.size() + " worlds into the cache.");
+            debug("Loaded " + prismWorlds.size() + " worlds into the cache.");
         } catch (final SQLException e) {
             handleDataSourceException(e);
         }
@@ -334,7 +339,7 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
             s.executeUpdate();
             ResultSet rs = s.getGeneratedKeys();
             if (rs.next()) {
-                Prism.log("Registering new world to the database/cache: " + worldName + " " + rs.getInt(1));
+                info("Registering new world to the database/cache: " + worldName + " " + rs.getInt(1));
                 Prism.prismWorlds.put(worldName, rs.getInt(1));
             } else {
                 throw new SQLException("Insert statement failed - no generated key obtained.");
@@ -379,9 +384,9 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
     }
 
     @Override
-    public SettingsQuery createSettingsQuery() {
+    public SettingsQuery getSettingsQuery() {
         if (settingsQuery == null) {
-            settingsQuery = new SqlSettingsQuery(this);
+            settingsQuery = new SqlSettingsQuery(this,logger);
         }
         return settingsQuery;
     }
@@ -393,5 +398,17 @@ public abstract class SqlPrismDataSource implements PrismDataSource {
 
     public InsertQuery getDataInsertionQuery() {
         return new SqlInsertBuilder(this);
+    }
+
+    protected void warning(String message) {
+        logger.warning("[PRISM]" + message);
+    }
+
+    protected void info(String message) {
+        logger.info("[PRISM]" + message);
+    }
+
+    protected void debug(String message) {
+        logger.info("[PRISM] -DEBUG- " + message);
     }
 }

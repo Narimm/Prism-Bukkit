@@ -20,7 +20,7 @@ public class Settings {
      * @param player Player
      */
     public static void deleteSetting(String key, Player player) {
-        Prism.getPrismDataSource().createSettingsQuery().deleteSetting(key, player);
+        Prism.getPrismDataSource().getSettingsQuery().deleteSetting(key, player);
     }
 
     /**
@@ -39,7 +39,7 @@ public class Settings {
      * @param player Player
      */
     public static void saveSetting(String key, String value, Player player) {
-        Prism.getPrismDataSource().createSettingsQuery().saveSetting(key, value, player);
+        Prism.getPrismDataSource().getSettingsQuery().saveSetting(key, value, player);
     }
 
     /**
@@ -58,6 +58,6 @@ public class Settings {
      * @return String
      */
     public static String getSetting(String key, Player player) {
-        return Prism.getPrismDataSource().createSettingsQuery().getSetting(key, player);
+        return Prism.getPrismDataSource().getSettingsQuery().getSetting(key, player);
     }
 }

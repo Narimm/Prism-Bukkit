@@ -119,6 +119,7 @@ public class PrismDatabaseFactory {
                 Prism.log("HIKARI: prism will configure itself using the hikari parameters");
                 break;
         }
+        database.createDataSource();
         return database;
     }
 
